@@ -11,6 +11,7 @@ import { initializeDatabase } from './database';
 import { OtelGrpcServer } from './otel/grpc-server';
 import otelRouter from './otel/router';
 import { appRouter } from './trpc/router';
+import { createContext } from './trpc/context';
 import { SocketManager } from './trpc/socket';
 
 async function initializeServer() {
@@ -104,6 +105,7 @@ async function initializeServer() {
             '/trpc',
             trpcExpress.createExpressMiddleware({
                 router: appRouter,
+                createContext,
             }),
         );
 

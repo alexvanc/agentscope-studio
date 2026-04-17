@@ -26,8 +26,39 @@ export const queryClient = new QueryClient({
  * tRPC client instance
  * Type-safe API client that connects to the backend router
  */
+import { TRPCClientError } from '@trpc/client';
+import { observable } from '@trpc/server/observable';
+
 export const trpcClient = trpc.createClient({
     links: [
+        () =>
+            ({ op, next }) => {
+                return observable((observer) => {
+                    const unsubscribe = next(op).subscribe({
+                        next(value) {
+                            if (
+                                value.result?.type === 'data' &&
+                                (value.result.data as any)?.error?.data?.code === 'UNAUTHORIZED'
+                            ) {
+                                const redirectUri = encodeURIComponent(window.location.href);
+                                window.location.href = `https://aai.cstcloud.net/oidc/authorize?response_type=code&client_id=14093&scope=openid&redirect_uri=${redirectUri}`;
+                            }
+                            observer.next(value);
+                        },
+                        error(err) {
+                            if (err.data?.code === 'UNAUTHORIZED') {
+                                const redirectUri = encodeURIComponent(window.location.href);
+                                window.location.href = `https://aai.cstcloud.net/oidc/authorize?response_type=code&client_id=14093&scope=openid&redirect_uri=${redirectUri}`;
+                            }
+                            observer.error(err);
+                        },
+                        complete() {
+                            observer.complete();
+                        },
+                    });
+                    return unsubscribe;
+                });
+            },
         httpBatchLink({
             url: '/trpc',
             fetch(url, options) {
@@ -35,6 +66,15 @@ export const trpcClient = trpc.createClient({
                     ...options,
                     cache: 'no-store', // Disable HTTP caching
                 });
+            },
+            headers() {
+                const token = localStorage.getItem('aai_token');
+                if (token) {
+                    return {
+                        Authorization: `Bearer ${token}`,
+                    };
+                }
+                return {};
             },
         }),
     ],

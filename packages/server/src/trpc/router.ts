@@ -99,7 +99,7 @@ const contentBlocks = z.array(contentBlock);
 // Define ContentType as a string or ContentBlocks
 const contentType = z.union([z.string(), contentBlocks]);
 
-const t = initTRPC.create();
+import { t, protectedProcedure } from './trpc';
 
 export const appRouter = t.router({
     registerRun: t.procedure
@@ -368,7 +368,7 @@ export const appRouter = t.router({
                 });
         }),
 
-    clientGetFridayConfig: t.procedure.query(async () => {
+    clientGetFridayConfig: protectedProcedure.query(async () => {
         return FridayConfigManager.getInstance().getConfig();
     }),
 
@@ -398,7 +398,7 @@ export const appRouter = t.router({
      *   }
      * }
      */
-    getProjects: t.procedure
+    getProjects: protectedProcedure
         .input(TableRequestParamsSchema)
         .query(async ({ input }) => {
             try {
@@ -421,7 +421,7 @@ export const appRouter = t.router({
             }
         }),
 
-    getTraces: t.procedure
+    getTraces: protectedProcedure
         .input(TableRequestParamsSchema)
         .query(async ({ input }) => {
             try {
@@ -444,7 +444,7 @@ export const appRouter = t.router({
             }
         }),
 
-    getTrace: t.procedure
+    getTrace: protectedProcedure
         .input(GetTraceParamsSchema)
         .query(async ({ input }) => {
             try {
@@ -461,7 +461,7 @@ export const appRouter = t.router({
             }
         }),
 
-    getTraceStatistic: t.procedure
+    getTraceStatistic: protectedProcedure
         .input(GetTraceStatisticParamsSchema)
         .query(async ({ input }) => {
             try {
@@ -478,7 +478,7 @@ export const appRouter = t.router({
             }
         }),
 
-    getCurrentVersion: t.procedure.query(async () => {
+    getCurrentVersion: protectedProcedure.query(async () => {
         try {
             const version = APP_INFO.version;
             return {
@@ -500,7 +500,7 @@ export const appRouter = t.router({
         }
     }),
 
-    getDataInfo: t.procedure.query(async () => {
+    getDataInfo: protectedProcedure.query(async () => {
         try {
             const configManager = ConfigManager.getInstance();
             const dbStats = configManager.getDataStats();
@@ -531,6 +531,13 @@ export const appRouter = t.router({
                         : 'Failed to get database info',
             });
         }
+    }),
+
+    getMe: protectedProcedure.query(({ ctx }) => {
+        return {
+            success: true,
+            data: ctx.user,
+        };
     }),
 });
 
