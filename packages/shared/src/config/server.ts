@@ -46,10 +46,36 @@ export const ServerConfig = {
         process.env.OTEL_GRPC_PORT ||
             DEFAULT_CONFIG.server.otelGrpcPort.toString(),
     ),
-    database: {
-        type: 'better-sqlite3' as const,
-        database: path.join(PATHS.getAppDataDir(), 'database.sqlite'),
-    },
+    database: (() => {
+        // 1. Check for local database.config.json file
+        try {
+            const dbConfigPath = path.join(process.cwd(), 'database.config.json');
+            if (fs.existsSync(dbConfigPath)) {
+                console.log(`[Config] Loading database configuration from ${dbConfigPath}`);
+                return JSON.parse(fs.readFileSync(dbConfigPath, 'utf-8'));
+            }
+        } catch (error) {
+            console.error('[Config] Failed to parse database.config.json:', error);
+        }
+
+        // 2. Fallback to Environment Variables
+        if (process.env.DB_TYPE === 'mariadb' || process.env.DB_TYPE === 'mysql') {
+            return {
+                type: 'mariadb' as const,
+                host: process.env.DB_HOST || 'localhost',
+                port: parseInt(process.env.DB_PORT || '3306'),
+                username: process.env.DB_USER || 'root',
+                password: process.env.DB_PASSWORD || '',
+                database: process.env.DB_NAME || 'agentscope',
+            };
+        }
+
+        // 3. Default to SQLite
+        return {
+            type: 'better-sqlite3' as const,
+            database: path.join(PATHS.getAppDataDir(), 'database.sqlite'),
+        };
+    })(),
 } as const;
 
 // 服务器端的配置管理
@@ -119,6 +145,9 @@ export class ConfigManager {
 
     getDatabaseSize(): number {
         try {
+            if (this.config.database.type !== 'better-sqlite3') {
+                return 0; // File size isn't applicable for remote databases
+            }
             const dbPath = this.getDatabasePath();
             if (fs.existsSync(dbPath)) {
                 const stats = fs.statSync(dbPath);

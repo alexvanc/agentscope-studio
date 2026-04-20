@@ -9,7 +9,7 @@ import { ContentBlocks } from '../../../shared/src';
 
 @ViewEntity({
     expression: (dataSource: DataSource) => {
-        const dialect = dataSource.options.type;
+        const dialect = String(dataSource.options.type).toLowerCase();
 
         const jsonArrayAgg = (() => {
             switch (dialect) {
@@ -23,6 +23,13 @@ import { ContentBlocks } from '../../../shared/src';
                     WHERE reply_id = r.id
                     ORDER BY timestamp ASC
                 )
+            )`;
+                case 'mariadb':
+                case 'mysql':
+                    return `(
+                SELECT COALESCE(JSON_ARRAYAGG(JSON_EXTRACT(m2.content, '$')), '[]')
+                FROM friday_app_message_table m2
+                WHERE m2.reply_id = r.id
             )`;
                 default:
                     throw new Error(`Unsupported database type: ${dialect}`);

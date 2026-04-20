@@ -24,7 +24,7 @@ export class RunTable extends BaseEntity {
     @Column()
     pid: number;
 
-    @Column({ type: 'varchar', enum: Status, default: Status.DONE })
+    @Column({ type: 'varchar', default: Status.DONE })
     status: Status;
 
     @OneToMany(() => ReplyTable, (reply) => reply.runId)

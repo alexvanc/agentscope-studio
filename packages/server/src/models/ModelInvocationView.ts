@@ -2,8 +2,15 @@ import { BaseEntity, DataSource, ViewColumn, ViewEntity } from 'typeorm';
 import { SpanTable } from './Trace';
 
 @ViewEntity({
-    expression: (dataSource: DataSource) =>
-        dataSource
+    expression: (dataSource: DataSource) => {
+        const type = String(dataSource.options.type).toLowerCase();
+        const isMysql = type === 'mysql' || type === 'mariadb';
+        
+        const dateMinus1MonthNano = isMysql ? `(UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 1 MONTH)) * 1000000000)` : `(strftime('%s', 'now', '-1 month') * 1000000000)`;
+        const dateMinus7DaysNano = isMysql ? `(UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 7 DAY)) * 1000000000)` : `(strftime('%s', 'now', '-7 days') * 1000000000)`;
+        const dateMinus1YearNano = isMysql ? `(UNIX_TIMESTAMP(DATE_SUB(NOW(), INTERVAL 1 YEAR)) * 1000000000)` : `(strftime('%s', 'now', '-1 year') * 1000000000)`;
+
+        return dataSource
             .createQueryBuilder()
             .from(SpanTable, 'span')
             .innerJoin('run_table', 'run', 'run.id = span.conversationId')
@@ -40,7 +47,7 @@ import { SpanTable } from './Trace';
             WHEN span.totalTokens IS NOT NULL
             AND (span.operationName = 'chat'
                  OR span.operationName = 'chat_model')
-            AND span.startTimeUnixNano > (strftime('%s', 'now', '-1 month') * 1000000000)
+            AND span.startTimeUnixNano > ${dateMinus1MonthNano}
             THEN CAST(span.totalTokens AS INTEGER)
             ELSE 0
         END), 0)`,
@@ -52,7 +59,7 @@ import { SpanTable } from './Trace';
             WHEN span.totalTokens IS NOT NULL
             AND (span.operationName = 'chat'
                  OR span.operationName = 'chat_model')
-            AND span.startTimeUnixNano > (strftime('%s', 'now', '-7 days') * 1000000000)
+            AND span.startTimeUnixNano > ${dateMinus7DaysNano}
             THEN CAST(span.totalTokens AS INTEGER)
             ELSE 0
         END), 0)`,
@@ -64,7 +71,7 @@ import { SpanTable } from './Trace';
             WHEN span.totalTokens IS NOT NULL
             AND (span.operationName = 'chat'
                  OR span.operationName = 'chat_model')
-            AND span.startTimeUnixNano > (strftime('%s', 'now', '-1 year') * 1000000000)
+            AND span.startTimeUnixNano > ${dateMinus1YearNano}
             THEN CAST(span.totalTokens AS INTEGER)
             ELSE 0
         END), 0)`,
@@ -75,7 +82,7 @@ import { SpanTable } from './Trace';
                 `COUNT(CASE
                     WHEN (span.operationName = 'chat'
                          OR span.operationName = 'chat_model')
-                    AND span.startTimeUnixNano > (strftime('%s', 'now', '-1 month') * 1000000000)
+                    AND span.startTimeUnixNano > ${dateMinus1MonthNano}
                     THEN 1
                 END)`,
                 'modelInvocationsMonthAgo',
@@ -85,7 +92,7 @@ import { SpanTable } from './Trace';
                 `COUNT(CASE
                     WHEN (span.operationName = 'chat'
                          OR span.operationName = 'chat_model')
-                    AND span.startTimeUnixNano > (strftime('%s', 'now', '-7 days') * 1000000000)
+                    AND span.startTimeUnixNano > ${dateMinus7DaysNano}
                     THEN 1
                 END)`,
                 'modelInvocationsWeekAgo',
@@ -95,11 +102,12 @@ import { SpanTable } from './Trace';
                 `COUNT(CASE
                     WHEN (span.operationName = 'chat'
                          OR span.operationName = 'chat_model')
-                    AND span.startTimeUnixNano > (strftime('%s', 'now', '-1 year') * 1000000000)
+                    AND span.startTimeUnixNano > ${dateMinus1YearNano}
                     THEN 1
                 END)`,
                 'modelInvocationsYearAgo',
-            ),
+            );
+    },
 })
 export class ModelInvocationView extends BaseEntity {
     @ViewColumn()

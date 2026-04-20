@@ -1,4 +1,5 @@
 import { memo, useEffect, useRef, useState } from 'react';
+import { trpc } from '@/api/trpc';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
@@ -6,6 +7,7 @@ import {
     ChevronRightIcon,
     Command,
     SettingsIcon,
+    User,
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button.tsx';
@@ -34,6 +36,9 @@ const StudioSidebar = () => {
     const { t } = useTranslation();
     const location = useLocation();
     const isInitialMount = useRef(true);
+
+    const { data: userData } = trpc.getMe.useQuery();
+    const user = userData?.data;
 
     const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
     const [hasUpdate, setHasUpdate] = useState(false);
@@ -81,18 +86,18 @@ const StudioSidebar = () => {
                         <SidebarMenuButton
                             size="lg"
                             asChild
-                            tooltip="AgentScope Studio"
+                            tooltip={user?.name || "AgentScope Studio"}
                         >
                             <a href="#">
                                 <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
-                                    <Command className="size-4" />
+                                    <User className="size-4" />
                                 </div>
                                 <div className="grid flex-1 text-left text-sm leading-tight">
                                     <span className="truncate font-medium">
-                                        AgentScope
+                                        {user?.name || 'AgentScope'}
                                     </span>
                                     <span className="truncate text-xs">
-                                        Studio
+                                        {user?.email || 'Studio'}
                                     </span>
                                 </div>
                             </a>
