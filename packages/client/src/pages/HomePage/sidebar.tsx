@@ -108,9 +108,11 @@ const StudioSidebar = () => {
             <SidebarContent>
                 {sidebarItems.map((item) => (
                     <SidebarGroup key={item.title} className="py-4">
-                        <SidebarGroupLabel className="text-sm font-semibold mb-2">
-                            <span>{item.title}</span>
-                        </SidebarGroupLabel>
+                        {open && (
+                            <SidebarGroupLabel className="text-sm font-semibold mb-2">
+                                <span>{item.title}</span>
+                            </SidebarGroupLabel>
+                        )}
                         {item.items.map((subItem) => (
                             <SidebarGroupContent key={subItem.title}>
                                 <SidebarMenu>
@@ -144,7 +146,7 @@ const StudioSidebar = () => {
                                             }}
                                         >
                                             <subItem.icon className="size-5" />
-                                            <span className="text-base">{subItem.title}</span>
+                                            {open && <span className="text-base">{subItem.title}</span>}
                                         </SidebarMenuButton>
                                     </SidebarMenuItem>
                                 </SidebarMenu>

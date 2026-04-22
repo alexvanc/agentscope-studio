@@ -7,13 +7,13 @@ import {
     SpanResource,
     SpanScope,
     Trace,
-} from '../../../shared/src/types/trace.js';
+} from '../../../../shared/src/types/trace.js';
 import {
     ModelInvocationData,
     TableData,
     TableRequestParams,
-} from '../../../shared/src/types/trpc.js';
-import { getNestedValue } from '../../../shared/src/utils/objectUtils.js';
+} from '../../../../shared/src/types/trpc.js';
+import { getNestedValue } from '../../../../shared/src/utils/objectUtils.js';
 import { ModelInvocationView } from '../models/ModelInvocationView.js';
 import { SpanTable } from '../models/Trace.js';
 

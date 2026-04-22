@@ -6,7 +6,7 @@ import {
     ManyToOne,
     PrimaryColumn,
 } from 'typeorm';
-import { ContentBlocks } from '../../../shared/src/index.js';
+import { ContentBlocks } from '../../../../shared/src/index.js';
 
 @Entity()
 export class FridayAppMessageTable extends BaseEntity {
