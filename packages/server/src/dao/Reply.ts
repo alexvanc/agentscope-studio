@@ -1,4 +1,4 @@
-import { RegisterReplyParams, Reply, Message } from '../../../shared/src';
+import { RegisterReplyParams, Reply, Message } from '../../../shared/src/index';
 import { ReplyTable } from '../models/Reply';
 
 export class ReplyDao {

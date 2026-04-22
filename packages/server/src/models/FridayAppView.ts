@@ -5,7 +5,7 @@ import {
     ViewColumn,
     ViewEntity,
 } from 'typeorm';
-import { ContentBlocks } from '../../../shared/src';
+import { ContentBlocks } from '../../../shared/src/index';
 
 @ViewEntity({
     expression: (dataSource: DataSource) => {

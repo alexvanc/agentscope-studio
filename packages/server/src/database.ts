@@ -1,7 +1,7 @@
 import { DataSource, DataSourceOptions } from 'typeorm';
 import { InputRequestDao } from './dao/InputRequest';
 import { RunDao } from './dao/Run';
-import { migrations } from './migrations';
+import { migrations } from './migrations/index';
 import { CodingAgentTable } from './models/CodingAgent';
 import { FridayAppMessageTable, FridayAppReplyTable } from './models/FridayApp';
 import { FridayAppReplyView } from './models/FridayAppView';

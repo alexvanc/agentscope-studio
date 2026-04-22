@@ -22,7 +22,7 @@ import { validateToken } from './trpc';
 
 import dayjs from 'dayjs';
 import * as fs from 'node:fs';
-import { ConfigManager, PATHS } from '../../../shared/src';
+import { ConfigManager, PATHS } from '../../../shared/src/index';
 import {
     FridayConfig,
     FridayConfigManager,

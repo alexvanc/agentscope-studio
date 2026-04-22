@@ -4,7 +4,7 @@ import { createServer } from 'http';
 import opener from 'opener';
 import path from 'path';
 import portfinder from 'portfinder';
-import { APP_INFO, ConfigManager } from '../../shared/src/config';
+import { APP_INFO, ConfigManager } from '../../shared/src/config/index';
 import { displayBanner } from '../../shared/src/utils/banner';
 import { promptUser } from '../../shared/src/utils/terminal';
 import { initializeDatabase } from './database';

@@ -17,7 +17,7 @@ import {
     TableData,
     TableRequestParamsSchema,
     Trace,
-} from '../../../shared/src';
+} from '../../../shared/src/index';
 import { FridayConfigManager } from '../../../shared/src/config/friday';
 import { FridayAppMessageDao } from '../dao/FridayAppMessage';
 import { InputRequestDao } from '../dao/InputRequest';
@@ -26,7 +26,7 @@ import { ReplyDao } from '../dao/Reply';
 import { RunDao } from '../dao/Run';
 import { SpanDao } from '../dao/Trace';
 import { SocketManager } from './socket';
-import { APP_INFO } from '../../../shared/src';
+import { APP_INFO } from '../../../shared/src/index';
 import { ConfigManager } from '../../../shared/src/config/server';
 
 const textBlock = z.object({

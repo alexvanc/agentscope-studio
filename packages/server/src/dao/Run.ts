@@ -6,10 +6,10 @@ import {
     Status,
     TableData,
     TableRequestParams,
-} from '../../../shared/src';
+} from '../../../shared/src/index';
 import { RunTable } from '../models/Run';
 import { RunView } from '../models/RunView';
-import { checkProcessByPid } from '../utils';
+import { checkProcessByPid } from '../utils/index';
 import { SpanDao } from './Trace';
 
 export class RunDao {
@@ -445,7 +445,7 @@ export class RunDao {
             .limit(4)
             .getRawMany();
 
-        const data = runViewData.length > 0 ? runViewData[0] : {
+        const dataRaw = runViewData.length > 0 ? runViewData[0] : {
             totalProjects: 0,
             totalRuns: 0,
             projectsWeekAgo: 0,
@@ -454,7 +454,43 @@ export class RunDao {
             runsMonthAgo: 0,
             projectsYearAgo: 0,
             runsYearAgo: 0,
-            monthlyRuns: '[]',
+        };
+
+        // Fetch monthly runs manually to avoid complex View correlation issues
+        const type = RunTable.getRepository().manager.connection.options.type;
+        const isMysql = type === 'mysql' || type === 'mariadb';
+        
+        let monthlyRunsRaw;
+        if (isMysql) {
+            monthlyRunsRaw = await RunTable.createQueryBuilder('run')
+                .select("DATE_FORMAT(run.timestamp, '%Y-%m')", 'month')
+                .addSelect('COUNT(*)', 'count')
+                .innerJoin('coding_codingagent', 'ca', 'ca.id = run.projectId')
+                .where("run.timestamp > DATE_SUB(NOW(), INTERVAL 11 MONTH)")
+                .andWhere(userId ? 'ca.user_id = :userId' : '1=1', { userId })
+                .groupBy('month')
+                .orderBy('month', 'DESC')
+                .getRawMany();
+        } else {
+            monthlyRunsRaw = await RunTable.createQueryBuilder('run')
+                .select("strftime('%Y-%m', run.timestamp)", 'month')
+                .addSelect('COUNT(*)', 'count')
+                .innerJoin('coding_codingagent', 'ca', 'ca.id = run.projectId')
+                .where("run.timestamp > strftime('%Y-%m-%d %H:%M:%S', 'now', '-11 months')")
+                .andWhere(userId ? 'ca.user_id = :userId' : '1=1', { userId })
+                .groupBy('month')
+                .orderBy('month', 'DESC')
+                .getRawMany();
+        }
+
+        const monthlyRuns = monthlyRunsRaw.map(r => ({
+            month: r.month,
+            count: parseInt(r.count)
+        }));
+
+        const data = {
+            ...dataRaw,
+            monthlyRuns: JSON.stringify(monthlyRuns)
         };
 
         return {
