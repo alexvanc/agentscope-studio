@@ -13,9 +13,14 @@ import { checkProcessByPid } from '../utils';
 import { SpanDao } from './Trace';
 
 export class RunDao {
-    static async doesProjectExist(projectId: string) {
+    static async doesProjectExist(projectId: string, userId?: string) {
         try {
-            const run = await RunTable.findOne({ where: { projectId } });
+            const queryBuilder = RunTable.createQueryBuilder('run')
+                .where('run.projectId = :projectId', { projectId });
+            if (userId) {
+                queryBuilder.innerJoin('coding_codingagent', 'ca', 'ca.id = run.projectId AND ca.user_id = :userId', { userId });
+            }
+            const run = await queryBuilder.getOne();
             return run !== null;
         } catch (error) {
             console.error(error);
@@ -23,9 +28,14 @@ export class RunDao {
         }
     }
 
-    static async doesRunExist(runId: string): Promise<boolean> {
+    static async doesRunExist(runId: string, userId?: string): Promise<boolean> {
         try {
-            const run = await RunTable.findOne({ where: { id: runId } });
+            const queryBuilder = RunTable.createQueryBuilder('run')
+                .where('run.id = :runId', { runId });
+            if (userId) {
+                queryBuilder.innerJoin('coding_codingagent', 'ca', 'ca.id = run.projectId AND ca.user_id = :userId', { userId });
+            }
+            const run = await queryBuilder.getOne();
             return run !== null;
         } catch (error) {
             console.error(error);
@@ -211,11 +221,17 @@ export class RunDao {
         }
     }
 
-    static async getAllProjects(): Promise<ProjectData[]> {
+    static async getAllProjects(userId?: string): Promise<ProjectData[]> {
         try {
-            const result = await RunTable.createQueryBuilder('run')
+            let queryBuilder = RunTable.createQueryBuilder('run')
                 .select('DISTINCT run.projectId', 'projectId')
                 .addSelect('MAX(run.project_name)', 'project_name')
+                
+            if (userId) {
+                queryBuilder = queryBuilder.innerJoin('coding_codingagent', 'ca', 'ca.id = run.projectId AND ca.user_id = :userId', { userId });
+            }
+                
+            const result = await queryBuilder
                 .addSelect(
                     (qb) =>
                         qb
@@ -284,12 +300,17 @@ export class RunDao {
     /*
      * Get all runs for a project
      */
-    static async getAllProjectRuns(projectId: string) {
+    static async getAllProjectRuns(projectId: string, userId?: string) {
         try {
-            const result = await RunTable.find({
-                where: { projectId },
-                order: { timestamp: 'DESC' },
-            });
+            let queryBuilder = RunTable.createQueryBuilder('run')
+                .where('run.projectId = :projectId', { projectId })
+                .orderBy('run.timestamp', 'DESC');
+                
+            if (userId) {
+                queryBuilder = queryBuilder.innerJoin('coding_codingagent', 'ca', 'ca.id = run.projectId AND ca.user_id = :userId', { userId });
+            }
+                
+            const result = await queryBuilder.getMany();
 
             return result.map(
                 (row) =>
@@ -402,22 +423,42 @@ export class RunDao {
         }
     }
 
-    static async getRunViewData() {
+    static async getRunViewData(userId?: string) {
         // Get run view data
-        const runViewData = await RunView.find();
+        const query = userId ? { where: { userId } } : {};
+        const runViewData = await RunView.find(query);
         // Search four projects that are updated most recently
-        const recentProjects = await RunTable.createQueryBuilder('run')
+        let recentProjectsQuery = RunTable.createQueryBuilder('run')
             .select('run.projectId', 'projectId')
             .addSelect('MAX(run.project_name)', 'project_name')
             .addSelect('MAX(run.timestamp)', 'lastUpdateTime')
-            .addSelect('COUNT(*)', 'runCount')
+            .addSelect('COUNT(*)', 'runCount');
+
+        if (userId) {
+            recentProjectsQuery = recentProjectsQuery
+                .innerJoin('coding_codingagent', 'ca', 'ca.id = run.projectId AND ca.user_id = :userId', { userId });
+        }
+
+        const recentProjects = await recentProjectsQuery
             .groupBy('run.projectId')
             .orderBy('lastUpdateTime', 'DESC')
             .limit(4)
             .getRawMany();
 
+        const data = runViewData.length > 0 ? runViewData[0] : {
+            totalProjects: 0,
+            totalRuns: 0,
+            projectsWeekAgo: 0,
+            runsWeekAgo: 0,
+            projectsMonthAgo: 0,
+            runsMonthAgo: 0,
+            projectsYearAgo: 0,
+            runsYearAgo: 0,
+            monthlyRuns: '[]',
+        };
+
         return {
-            ...runViewData[0],
+            ...data,
             recentProjects: recentProjects.map((project) => ({
                 projectId: project.projectId,
                 name: project.project_name,

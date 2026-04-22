@@ -18,11 +18,13 @@ import { BaseEntity, DataSource, ViewColumn, ViewEntity } from 'typeorm';
             ), '[]')
             FROM (
                 SELECT 
-                    DATE_FORMAT(run.timestamp, '%Y-%m') as month,
+                    DATE_FORMAT(r2.timestamp, '%Y-%m') as month,
                     COUNT(*) as count
-                FROM run_table run
-                WHERE run.timestamp > DATE_SUB(NOW(), INTERVAL 11 MONTH)
-                GROUP BY DATE_FORMAT(run.timestamp, '%Y-%m')
+                FROM run_table r2
+                INNER JOIN coding_codingagent ca2 ON ca2.id = r2.projectId
+                WHERE r2.timestamp > DATE_SUB(NOW(), INTERVAL 11 MONTH)
+                AND ca2.user_id = ca.user_id
+                GROUP BY DATE_FORMAT(r2.timestamp, '%Y-%m')
                 ORDER BY month DESC
             ) monthly_counts
         )` : `(
@@ -38,11 +40,13 @@ import { BaseEntity, DataSource, ViewColumn, ViewEntity } from 'typeorm';
                 SELECT 
                     strftime('%Y-%m', months.date) as month,
                     COUNT(CASE 
-                        WHEN strftime('%Y-%m', run.timestamp) = strftime('%Y-%m', months.date) 
+                        WHEN strftime('%Y-%m', r2.timestamp) = strftime('%Y-%m', months.date) 
                         THEN 1 
                     END) as count
                 FROM months
-                LEFT JOIN run_table run ON strftime('%Y-%m', run.timestamp) = strftime('%Y-%m', months.date)
+                LEFT JOIN run_table r2 ON strftime('%Y-%m', r2.timestamp) = strftime('%Y-%m', months.date)
+                LEFT JOIN coding_codingagent ca2 ON ca2.id = r2.projectId
+                WHERE ca2.user_id IS NULL OR ca2.user_id = ca.user_id
                 GROUP BY strftime('%Y-%m', months.date)
                 ORDER BY month DESC
             )
@@ -57,7 +61,8 @@ import { BaseEntity, DataSource, ViewColumn, ViewEntity } from 'typeorm';
 
         return dataSource
             .createQueryBuilder()
-            .select('COUNT(DISTINCT run.projectId)', 'totalProjects')
+            .select('ca.user_id', 'userId')
+            .addSelect('COUNT(DISTINCT run.projectId)', 'totalProjects')
             .addSelect('COUNT(*)', 'totalRuns')
             .addSelect(`COUNT(DISTINCT CASE WHEN run.timestamp > ${dateMinus1Month} THEN run.projectId END)`, 'projectsMonthAgo')
             .addSelect(`COUNT(CASE WHEN run.timestamp > ${dateMinus1Month} THEN 1 END)`, 'runsMonthAgo')
@@ -66,10 +71,15 @@ import { BaseEntity, DataSource, ViewColumn, ViewEntity } from 'typeorm';
             .addSelect(`COUNT(DISTINCT CASE WHEN run.timestamp > ${dateMinus1Year} THEN run.projectId END)`, 'projectsYearAgo')
             .addSelect(`COUNT(CASE WHEN run.timestamp > ${dateMinus1Year} THEN 1 END)`, 'runsYearAgo')
             .addSelect(monthlyRunsQuery, 'monthlyRuns')
-            .from('run_table', 'run');
+            .from('run_table', 'run')
+            .innerJoin('coding_codingagent', 'ca', 'ca.id = run.projectId')
+            .groupBy('ca.user_id');
     },
 })
 export class RunView extends BaseEntity {
+    @ViewColumn()
+    userId: string;
+
     @ViewColumn()
     totalProjects: number;
 

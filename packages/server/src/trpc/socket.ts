@@ -18,6 +18,7 @@ import {
     SocketRoomName,
 } from '../../../shared/src/types/trpc';
 import { RunDao } from '../dao/Run';
+import { validateToken } from './trpc';
 
 import dayjs from 'dayjs';
 import * as fs from 'node:fs';
@@ -82,6 +83,21 @@ export class SocketManager {
         });
 
         const clientNamespace = this.io.of('/client');
+        clientNamespace.use(async (socket, next) => {
+            const token = socket.handshake.auth.token;
+            if (token) {
+                try {
+                    const user = await validateToken(token);
+                    if (user) {
+                        (socket as any).user = user;
+                    }
+                } catch (e) {
+                    console.error('Socket auth error:', e);
+                }
+            }
+            next();
+        });
+
         clientNamespace.on('connection', (socket) => {
             console.debug('Client connected');
 
@@ -90,8 +106,10 @@ export class SocketManager {
                 console.debug(
                     `${socket.id}: joined room: ${SocketRoomName.ProjectListRoom}`,
                 );
+                
+                const userId = (socket as any).user?.id;
 
-                RunDao.getAllProjects()
+                RunDao.getAllProjects(userId)
                     .then((projects) => {
                         // Push projects to the client
                         socket.emit(SocketEvents.server.pushProjects, projects);
@@ -105,11 +123,12 @@ export class SocketManager {
             socket.on(
                 SocketEvents.client.joinProjectRoom,
                 async (projectId: string, callback) => {
-                    const projectExist = await RunDao.doesProjectExist(projectId);
+                    const userId = (socket as any).user?.id;
+                    const projectExist = await RunDao.doesProjectExist(projectId, userId);
                     if (!projectExist) {
                         callback({
                             success: false,
-                            message: `Project ${projectId} not found`,
+                            message: `Project ${projectId} not found or access denied`,
                         });
                     } else {
                         socket.join(`project-${projectId}`);
@@ -118,7 +137,7 @@ export class SocketManager {
                         );
 
                         // Return runs to this socket/client
-                        RunDao.getAllProjectRuns(projectId)
+                        RunDao.getAllProjectRuns(projectId, userId)
                             .then((runs) => {
                                 // Push runs to the client
                                 socket.emit(
@@ -137,11 +156,12 @@ export class SocketManager {
             socket.on(
                 SocketEvents.client.joinRunRoom,
                 async (runId: string, callback) => {
-                    const runExist = await RunDao.doesRunExist(runId);
+                    const userId = (socket as any).user?.id;
+                    const runExist = await RunDao.doesRunExist(runId, userId);
                     if (!runExist) {
                         callback({
                             success: false,
-                            message: `Run ${runId} not found`,
+                            message: `Run ${runId} not found or access denied`,
                         });
                     } else {
                         socket.join(`run-${runId}`);
@@ -248,7 +268,8 @@ export class SocketManager {
                 );
 
                 // Return current overview data
-                const res = await this._getOverViewData();
+                const userId = (socket as any).user?.id;
+                const res = await this._getOverViewData(userId);
                 socket.emit(SocketEvents.server.pushOverviewData, res);
             });
 
@@ -546,33 +567,35 @@ export class SocketManager {
      * Emit events to the project list room.
      */
     static broadcastRunToProjectListRoom() {
-        RunDao.getAllProjects()
-            .then((projects) => {
-                // Push projects to the client
-                this.io
-                    .of('/client')
-                    .to(SocketRoomName.ProjectListRoom)
-                    .emit(SocketEvents.server.pushProjects, projects);
-            })
-            .catch((error) => {
-                console.error(error);
-                throw error;
+        this.io.of('/client').in(SocketRoomName.ProjectListRoom).fetchSockets().then(sockets => {
+            sockets.forEach(async (socket) => {
+                const userId = (socket as any).user?.id;
+                try {
+                    const projects = await RunDao.getAllProjects(userId);
+                    socket.emit(SocketEvents.server.pushProjects, projects);
+                } catch (error) {
+                    console.error(error);
+                }
             });
+        }).catch(error => {
+            console.error(error);
+        });
     }
 
     static broadcastRunToProjectRoom(projectId: string) {
-        RunDao.getAllProjectRuns(projectId)
-            .then((runs) => {
-                // Push runs to the client
-                this.io
-                    .of('/client')
-                    .to(`project-${projectId}`)
-                    .emit(SocketEvents.server.pushRunsData, runs);
-            })
-            .catch((error) => {
-                console.error(error);
-                throw error;
+        this.io.of('/client').in(`project-${projectId}`).fetchSockets().then(sockets => {
+            sockets.forEach(async (socket) => {
+                const userId = (socket as any).user?.id;
+                try {
+                    const runs = await RunDao.getAllProjectRuns(projectId, userId);
+                    socket.emit(SocketEvents.server.pushRunsData, runs);
+                } catch (error) {
+                    console.error(error);
+                }
             });
+        }).catch(error => {
+            console.error(error);
+        });
     }
 
     /*
@@ -676,22 +699,27 @@ export class SocketManager {
     }
 
     static broadcastOverviewDataToDashboardRoom() {
-        this._getOverViewData()
-            .then((res) => {
-                this.io
-                    .of('/client')
-                    .to(SocketRoomName.OverviewRoom)
-                    .emit(SocketEvents.server.pushOverviewData, res);
-            })
-            .catch((error) => {
-                console.error(error);
-                throw error;
+        // This broadcasts to the room, but different users might be in the room.
+        // We should instead emit per user, or maybe it's fine if it's not possible to do efficiently?
+        // Wait, socket.io allows fetching all sockets in a room.
+        this.io.of('/client').in(SocketRoomName.OverviewRoom).fetchSockets().then(sockets => {
+            sockets.forEach(async (socket) => {
+                const userId = (socket as any).user?.id;
+                try {
+                    const res = await this._getOverViewData(userId);
+                    socket.emit(SocketEvents.server.pushOverviewData, res);
+                } catch (error) {
+                    console.error(error);
+                }
             });
+        }).catch(error => {
+            console.error(error);
+        });
     }
 
-    static async _getOverViewData() {
-        const res1 = await RunDao.getRunViewData();
-        const res2 = await SpanDao.getModelInvocationViewData();
+    static async _getOverViewData(userId?: string) {
+        const res1 = await RunDao.getRunViewData(userId);
+        const res2 = await SpanDao.getModelInvocationViewData(userId);
 
         return {
             ...res1,

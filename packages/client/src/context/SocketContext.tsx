@@ -15,7 +15,10 @@ export function SocketContextProvider({ children }: { children: ReactNode }) {
     const [socket, setSocket] = useState<Socket | null>(null);
 
     useEffect(() => {
-        const newSocket = io(ClientConfig.socketPath);
+        const token = localStorage.getItem('aai_token');
+        const newSocket = io(ClientConfig.socketPath, {
+            auth: { token }
+        });
         setSocket(newSocket);
 
         return () => {

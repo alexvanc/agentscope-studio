@@ -9,13 +9,9 @@ export const t = initTRPC.context<Context>().create();
 const tokenCache = new Map<string, { data: any, expiresAt: number }>();
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
-export const isAuthed = t.middleware(async ({ ctx, next }) => {
-    if (!ctx.token) {
-        throw new TRPCError({ code: 'UNAUTHORIZED', message: 'No auth token provided' });
-    }
-
+export async function validateToken(token: string) {
     // Check cache
-    const tokenHash = crypto.createHash('md5').update(ctx.token).digest('hex');
+    const tokenHash = crypto.createHash('md5').update(token).digest('hex');
     const cached = tokenCache.get(tokenHash);
     let userInfo = null;
 
@@ -26,7 +22,7 @@ export const isAuthed = t.middleware(async ({ ctx, next }) => {
         try {
             const res = await fetch('https://aai.cstcloud.net/oidc/userinfo', {
                 headers: {
-                    'Authorization': `Bearer ${ctx.token}`
+                    'Authorization': `Bearer ${token}`
                 }
             });
 
@@ -51,12 +47,20 @@ export const isAuthed = t.middleware(async ({ ctx, next }) => {
         }
     }
 
-    ctx.user = {
+    return {
         id: userInfo.sub,
         email: userInfo.email || `${userInfo.sub}@aai.cstcloud.net`,
         name: userInfo.name,
-        raw_token: ctx.token
+        raw_token: token
     };
+}
+
+export const isAuthed = t.middleware(async ({ ctx, next }) => {
+    if (!ctx.token) {
+        throw new TRPCError({ code: 'UNAUTHORIZED', message: 'No auth token provided' });
+    }
+
+    ctx.user = await validateToken(ctx.token);
 
     return next({
         ctx: {

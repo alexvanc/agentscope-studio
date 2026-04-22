@@ -449,9 +449,9 @@ export const appRouter = t.router({
 
     getTrace: protectedProcedure
         .input(GetTraceParamsSchema)
-        .query(async ({ input }) => {
+        .query(async ({ input, ctx }) => {
             try {
-                return await SpanDao.getTrace(input.traceId);
+                return await SpanDao.getTrace(input.traceId, (ctx.user as any)?.id);
             } catch (error) {
                 console.error('Error in getTrace:', error);
                 throw new TRPCError({

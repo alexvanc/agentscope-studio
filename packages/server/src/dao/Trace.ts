@@ -208,11 +208,18 @@ export class SpanDao {
         });
     }
 
-    static async getTracesByTraceId(traceId: string): Promise<SpanTable[]> {
-        return await SpanTable.find({
-            where: { traceId },
-            order: { startTimeUnixNano: 'ASC' },
-        });
+    static async getTracesByTraceId(traceId: string, userId?: string): Promise<SpanTable[]> {
+        let queryBuilder = SpanTable.createQueryBuilder('span')
+            .where('span.traceId = :traceId', { traceId })
+            .orderBy('span.startTimeUnixNano', 'ASC');
+            
+        if (userId) {
+            queryBuilder = queryBuilder
+                .innerJoin('run_table', 'run', 'run.id = span.conversationId')
+                .innerJoin('coding_codingagent', 'ca', 'ca.id = run.projectId AND ca.user_id = :userId', { userId });
+        }
+            
+        return await queryBuilder.getMany();
     }
 
     static async getSpanById(spanId: string): Promise<SpanTable | null> {
@@ -221,12 +228,24 @@ export class SpanDao {
         });
     }
 
-    static async getModelInvocationViewData() {
-        const res = await ModelInvocationView.find();
+    static async getModelInvocationViewData(userId?: string) {
+        const query = userId ? { where: { userId } } : {};
+        const res = await ModelInvocationView.find(query);
         if (res.length > 0) {
             return res[0];
         } else {
-            throw new Error('ModelInvocationView data not found');
+            // Return default zero statistics if no data found
+            return {
+                totalModelInvocations: 0,
+                totalTokens: 0,
+                chatModelInvocations: 0,
+                tokensWeekAgo: 0,
+                tokensMonthAgo: 0,
+                tokensYearAgo: 0,
+                modelInvocationsWeekAgo: 0,
+                modelInvocationsMonthAgo: 0,
+                modelInvocationsYearAgo: 0
+            } as ModelInvocationView;
         }
     }
 
@@ -609,8 +628,7 @@ export class SpanDao {
         }
     }
 
-    // Get a single trace with all spans
-    static async getTrace(traceId: string): Promise<{
+    static async getTrace(traceId: string, userId?: string): Promise<{
         traceId: string;
         spans: SpanData[];
         startTime: string;
@@ -620,7 +638,7 @@ export class SpanDao {
         totalTokens?: number;
     }> {
         try {
-            const spans = await this.getTracesByTraceId(traceId);
+            const spans = await this.getTracesByTraceId(traceId, userId);
 
             if (spans.length === 0) {
                 throw new Error(`Trace with id ${traceId} not found`);

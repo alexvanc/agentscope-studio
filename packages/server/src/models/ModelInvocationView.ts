@@ -14,7 +14,9 @@ import { SpanTable } from './Trace';
             .createQueryBuilder()
             .from(SpanTable, 'span')
             .innerJoin('run_table', 'run', 'run.id = span.conversationId')
-            .select(
+            .innerJoin('coding_codingagent', 'ca', 'ca.id = run.projectId')
+            .select('ca.user_id', 'userId')
+            .addSelect(
                 `COUNT(CASE
                     WHEN (span.operationName = 'chat'
                          OR span.operationName = 'chat_model')
@@ -106,10 +108,14 @@ import { SpanTable } from './Trace';
                     THEN 1
                 END)`,
                 'modelInvocationsYearAgo',
-            );
+            )
+            .groupBy('ca.user_id');
     },
 })
 export class ModelInvocationView extends BaseEntity {
+    @ViewColumn()
+    userId: string;
+
     @ViewColumn()
     totalModelInvocations: number;
 
