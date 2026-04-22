@@ -107,19 +107,17 @@ const StudioSidebar = () => {
             </SidebarHeader>
             <SidebarContent>
                 {sidebarItems.map((item) => (
-                    <SidebarGroup key={item.title} className="py-4">
-                        {open && (
-                            <SidebarGroupLabel className="text-sm font-semibold mb-2">
-                                <span>{item.title}</span>
-                            </SidebarGroupLabel>
-                        )}
+                    <SidebarGroup key={item.title} className={open ? "py-3" : "py-1"}>
+                        <SidebarGroupLabel className="text-sm font-semibold mb-1">
+                            <span>{item.title}</span>
+                        </SidebarGroupLabel>
                         {item.items.map((subItem) => (
                             <SidebarGroupContent key={subItem.title}>
                                 <SidebarMenu>
                                     <SidebarMenuItem>
                                         <SidebarMenuButton
-                                            size="lg"
-                                            className="cursor-pointer py-6"
+                                            size={open ? "lg" : "default"}
+                                            className={open ? "cursor-pointer py-3" : "cursor-pointer"}
                                             tooltip={subItem.title}
                                             onClick={() => {
                                                 // Check if it's an external URL
@@ -145,8 +143,8 @@ const StudioSidebar = () => {
                                                 }
                                             }}
                                         >
-                                            <subItem.icon className="size-5" />
-                                            {open && <span className="text-base">{subItem.title}</span>}
+                                            <subItem.icon className={open ? "size-5" : "size-4"} />
+                                            <span className="text-base">{subItem.title}</span>
                                         </SidebarMenuButton>
                                     </SidebarMenuItem>
                                 </SidebarMenu>

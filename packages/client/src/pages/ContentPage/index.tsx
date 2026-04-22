@@ -323,7 +323,7 @@ const ContentPage = () => {
     return (
         <div className="flex flex-1 flex-col gap-4 py-8 px-12 h-full w-full overflow-y-auto">
             <div className="flex flex-col w-full rounded-lg gap-4">
-                <PageTitleSpan title={t('common.projects')} />
+                <PageTitleSpan title={t('common.overview')} />
 
                 {/* Stats cards */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-6 w-full">
