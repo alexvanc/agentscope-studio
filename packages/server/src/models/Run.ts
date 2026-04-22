@@ -1,5 +1,5 @@
 import { BaseEntity, Column, Entity, OneToMany, PrimaryColumn } from 'typeorm';
-import { Status } from '../../../shared/src/types/messageForm';
+import { Status } from '../../../../shared/src/types/messageForm.js';
 import { InputRequestTable } from '../models/InputRequest';
 import { ReplyTable } from '../models/Reply';
 import { SpanTable } from './Trace';
