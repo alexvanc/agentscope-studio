@@ -22,8 +22,8 @@ const StatisticsPanel = () => {
     const { t } = useTranslation();
 
     const metadata: Record<string, string | number | undefined> = {};
-    metadata[t('common.run-name')] = runData?.name;
-    metadata[t('common.project')] = runData?.project;
+    metadata[t('common.run-name')] = runData?.run_name;
+    metadata[t('common.project')] = runData?.project_name;
     metadata[t('common.timestamp')] = formatDateTime(runData?.timestamp);
 
     const invocationData: Record<string, string | number | undefined> = {};

@@ -57,13 +57,13 @@ import { BaseEntity, DataSource, ViewColumn, ViewEntity } from 'typeorm';
 
         return dataSource
             .createQueryBuilder()
-            .select('COUNT(DISTINCT run.project)', 'totalProjects')
+            .select('COUNT(DISTINCT run.projectId)', 'totalProjects')
             .addSelect('COUNT(*)', 'totalRuns')
-            .addSelect(`COUNT(DISTINCT CASE WHEN run.timestamp > ${dateMinus1Month} THEN run.project END)`, 'projectsMonthAgo')
+            .addSelect(`COUNT(DISTINCT CASE WHEN run.timestamp > ${dateMinus1Month} THEN run.projectId END)`, 'projectsMonthAgo')
             .addSelect(`COUNT(CASE WHEN run.timestamp > ${dateMinus1Month} THEN 1 END)`, 'runsMonthAgo')
-            .addSelect(`COUNT(DISTINCT CASE WHEN run.timestamp > ${dateMinus7Days} THEN run.project END)`, 'projectsWeekAgo')
+            .addSelect(`COUNT(DISTINCT CASE WHEN run.timestamp > ${dateMinus7Days} THEN run.projectId END)`, 'projectsWeekAgo')
             .addSelect(`COUNT(CASE WHEN run.timestamp > ${dateMinus7Days} THEN 1 END)`, 'runsWeekAgo')
-            .addSelect(`COUNT(DISTINCT CASE WHEN run.timestamp > ${dateMinus1Year} THEN run.project END)`, 'projectsYearAgo')
+            .addSelect(`COUNT(DISTINCT CASE WHEN run.timestamp > ${dateMinus1Year} THEN run.projectId END)`, 'projectsYearAgo')
             .addSelect(`COUNT(CASE WHEN run.timestamp > ${dateMinus1Year} THEN 1 END)`, 'runsYearAgo')
             .addSelect(monthlyRunsQuery, 'monthlyRuns')
             .from('run_table', 'run');

@@ -90,25 +90,33 @@ const Block = ({ title, number, footer, icon }: BlockProps) => {
 };
 
 interface ProjectRowProps {
-    project: string;
+    projectId: string;
+    project_name: string;
     runCount: number;
     lastUpdateTime: string;
 }
 
-const ProjectRow = ({ project, runCount, lastUpdateTime }: ProjectRowProps) => {
+const ProjectRow = ({
+    projectId,
+    project_name,
+    runCount,
+    lastUpdateTime,
+}: ProjectRowProps) => {
     const { t } = useTranslation();
     const unit = runCount > 1 ? t('unit.runs') : t('unit.run');
     const navigate = useNavigate();
     return (
         <div
             className="as-project-row flex items-center justify-between h-[50px] min-h-[50px] w-full min-w-0 cursor-pointer rounded-md px-2"
-            onClick={() => navigate(RouterPath.PROJECTS + '/' + project)}
+            onClick={() => navigate(RouterPath.PROJECTS + '/' + projectId)}
         >
             <div className="flex items-center w-full min-w-0 gap-2">
-                <Avatar style={{ flexShrink: 0 }}>{project.slice(0, 1)}</Avatar>
+                <Avatar style={{ flexShrink: 0 }}>
+                    {project_name.slice(0, 1)}
+                </Avatar>
                 <div className="flex flex-col min-w-0 w-0 flex-1 gap-0.5">
                     <div className="text-[14px] w-full min-w-0 font-medium truncate">
-                        {project}
+                        {project_name}
                     </div>
                     <div className="text-[12px] font-normal text-muted-foreground shrink-0 truncate">
                         {t('home.last-update', { time: lastUpdateTime })}
@@ -467,8 +475,9 @@ const ContentPage = () => {
                             {overviewData
                                 ? overviewData.recentProjects.map((proj) => (
                                       <ProjectRow
-                                          key={proj.name}
-                                          project={proj.name}
+                                          key={proj.projectId}
+                                          projectId={proj.projectId}
+                                          project_name={proj.name}
                                           runCount={proj.runCount}
                                           lastUpdateTime={formatDateTime(
                                               proj.lastUpdateTime,

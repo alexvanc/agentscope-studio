@@ -181,17 +181,18 @@ export interface InputRequestData {
 // 在进入这个run页面的时候得到的数据
 export interface RunData {
     id: string;
-    project: string;
-    name: string;
+    projectId: string;
+    project_name: string;
+    run_name: string;
     timestamp: string;
     run_dir: string;
     pid: number;
     status: Status;
 }
 
-// 在进入project页面的时候获得的数据
 export interface ProjectData {
-    project: string;
+    projectId: string;
+    project_name: string;
     running: number;
     pending: number;
     finished: number;
@@ -274,6 +275,7 @@ export interface OverviewData {
     monthlyRuns: string; // JSON string
 
     recentProjects: {
+        projectId: string;
         name: string;
         lastUpdateTime: string;
         runCount: number;

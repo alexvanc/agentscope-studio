@@ -13,9 +13,9 @@ import { checkProcessByPid } from '../utils';
 import { SpanDao } from './Trace';
 
 export class RunDao {
-    static async doesProjectExist(project: string) {
+    static async doesProjectExist(projectId: string) {
         try {
-            const run = await RunTable.findOne({ where: { project } });
+            const run = await RunTable.findOne({ where: { projectId } });
             return run !== null;
         } catch (error) {
             console.error(error);
@@ -80,13 +80,15 @@ export class RunDao {
      */
     static async getProjects(
         params: TableRequestParams,
+        userId?: string
     ): Promise<TableData<ProjectData>> {
         try {
             const { pagination, sort, filters } = params;
 
             // Build base query with aggregations
             let queryBuilder = RunTable.createQueryBuilder('run')
-                .select('run.project', 'project')
+                .select('run.projectId', 'projectId')
+                .addSelect('MAX(run.project_name)', 'project_name')
                 .addSelect(
                     'SUM(CASE WHEN run.status = :runningStatus THEN 1 ELSE 0 END)',
                     'running',
@@ -101,25 +103,36 @@ export class RunDao {
                 )
                 .addSelect('COUNT(*)', 'total')
                 .addSelect('MIN(run.timestamp)', 'createdAt')
-                .groupBy('run.project')
+                .groupBy('run.projectId')
                 .setParameters({
                     runningStatus: Status.RUNNING,
                     pendingStatus: Status.PENDING,
                     doneStatus: Status.DONE,
                 });
 
+            // Join with coding_codingagent if userId is provided
+            if (userId) {
+                queryBuilder.innerJoin(
+                    'coding_codingagent',
+                    'ca',
+                    'ca.id = run.projectId AND ca.user_id = :userId',
+                    { userId }
+                );
+                // We don't need to select ca.name because run.project_name already holds the project name
+            }
+
             // Apply filters using HAVING (since we're using GROUP BY)
-            if (filters?.project) {
+            if (filters?.project_name) {
                 const filterValue =
-                    typeof filters.project === 'object' &&
-                    filters.project !== null &&
-                    'value' in filters.project
-                        ? (filters.project as { value: string }).value
-                        : String(filters.project);
+                    typeof filters.project_name === 'object' &&
+                    filters.project_name !== null &&
+                    'value' in filters.project_name
+                        ? (filters.project_name as { value: string }).value
+                        : String(filters.project_name);
 
                 if (filterValue) {
                     queryBuilder = queryBuilder.having(
-                        'run.project LIKE :projectFilter',
+                        'MAX(run.project_name) LIKE :projectFilter OR run.projectId LIKE :projectFilter',
                         { projectFilter: `%${filterValue}%` },
                     );
                 }
@@ -132,8 +145,8 @@ export class RunDao {
 
             // For aggregated fields, we need to use the alias in quotes for SQLite
             switch (sortField) {
-                case 'project':
-                    queryBuilder.orderBy('run.project', sortOrder);
+                case 'project_name':
+                    queryBuilder.orderBy('run.project_name', sortOrder);
                     break;
                 case 'running':
                     queryBuilder.orderBy(
@@ -177,7 +190,8 @@ export class RunDao {
 
             // Map results to ProjectData type
             const list = result.map((row) => ({
-                project: row.project,
+                projectId: row.projectId,
+                project_name: row.project_name,
                 running: Number(row.running) || 0,
                 pending: Number(row.pending) || 0,
                 finished: Number(row.finished) || 0,
@@ -200,13 +214,14 @@ export class RunDao {
     static async getAllProjects(): Promise<ProjectData[]> {
         try {
             const result = await RunTable.createQueryBuilder('run')
-                .select('DISTINCT run.project', 'project')
+                .select('DISTINCT run.projectId', 'projectId')
+                .addSelect('MAX(run.project_name)', 'project_name')
                 .addSelect(
                     (qb) =>
                         qb
                             .select('COUNT(*)')
                             .from(RunTable, 'r')
-                            .where('r.project = run.project')
+                            .where('r.projectId = run.projectId')
                             .andWhere('r.status = :running', {
                                 running: Status.RUNNING,
                             }),
@@ -217,7 +232,7 @@ export class RunDao {
                         qb
                             .select('COUNT(*)')
                             .from(RunTable, 'r')
-                            .where('r.project = run.project')
+                            .where('r.projectId = run.projectId')
                             .andWhere('r.status = :pending', {
                                 pending: Status.PENDING,
                             }),
@@ -228,7 +243,7 @@ export class RunDao {
                         qb
                             .select('COUNT(*)')
                             .from(RunTable, 'r')
-                            .where('r.project = run.project')
+                            .where('r.projectId = run.projectId')
                             .andWhere('r.status = :finished', {
                                 finished: Status.DONE,
                             }),
@@ -239,16 +254,17 @@ export class RunDao {
                         qb
                             .select('MIN(r.timestamp)')
                             .from(RunTable, 'r')
-                            .where('r.project = run.project'),
+                            .where('r.projectId = run.projectId'),
                     'createdAt',
                 )
-                .groupBy('run.project')
+                .groupBy('run.projectId')
                 .getRawMany();
 
             return result.map(
                 (row) =>
                     ({
-                        project: row.project,
+                        projectId: row.projectId,
+                        project_name: row.project_name,
                         running: parseInt(row.running),
                         pending: parseInt(row.pending),
                         finished: parseInt(row.finished),
@@ -268,10 +284,10 @@ export class RunDao {
     /*
      * Get all runs for a project
      */
-    static async getAllProjectRuns(project: string) {
+    static async getAllProjectRuns(projectId: string) {
         try {
             const result = await RunTable.find({
-                where: { project },
+                where: { projectId },
                 order: { timestamp: 'DESC' },
             });
 
@@ -279,8 +295,9 @@ export class RunDao {
                 (row) =>
                     ({
                         id: row.id,
-                        project: row.project,
-                        name: row.name,
+                        projectId: row.projectId,
+                        project_name: row.project_name,
+                        run_name: row.run_name,
                         timestamp: row.timestamp,
                         run_dir: row.run_dir,
                         pid: row.pid,
@@ -306,8 +323,9 @@ export class RunDao {
                 return {
                     runData: {
                         id: result.id,
-                        project: result.project,
-                        name: result.name,
+                        projectId: result.projectId,
+                        project_name: result.project_name,
+                        run_name: result.run_name,
                         timestamp: result.timestamp,
                         run_dir: result.run_dir,
                         pid: result.pid,
@@ -389,21 +407,20 @@ export class RunDao {
         const runViewData = await RunView.find();
         // Search four projects that are updated most recently
         const recentProjects = await RunTable.createQueryBuilder('run')
-            .select('run.project', 'project')
+            .select('run.projectId', 'projectId')
+            .addSelect('MAX(run.project_name)', 'project_name')
             .addSelect('MAX(run.timestamp)', 'lastUpdateTime')
             .addSelect('COUNT(*)', 'runCount')
-            // 按项目分组
-            .groupBy('run.project')
-            // 按最后更新时间降序排序
+            .groupBy('run.projectId')
             .orderBy('lastUpdateTime', 'DESC')
-            // 限制返回4个结果
             .limit(4)
             .getRawMany();
 
         return {
             ...runViewData[0],
             recentProjects: recentProjects.map((project) => ({
-                name: project.project,
+                projectId: project.projectId,
+                name: project.project_name,
                 lastUpdateTime: project.lastUpdateTime,
                 runCount: parseInt(project.runCount),
             })),
@@ -426,10 +443,10 @@ export class RunDao {
         }
     }
 
-    static async deleteProjects(projects: string[]) {
+    static async deleteProjects(projectIds: string[]) {
         try {
             const runsToDelete = await RunTable.find({
-                where: { project: In(projects) },
+                where: { projectId: In(projectIds) },
                 select: ['id'],
             });
             const runIds = runsToDelete.map((run) => run.id);
@@ -439,7 +456,7 @@ export class RunDao {
             }
 
             const conditions: FindOptionsWhere<RunTable> = {
-                project: In(projects),
+                projectId: In(projectIds),
             };
             const result = await RunTable.delete(conditions);
             return result.affected;

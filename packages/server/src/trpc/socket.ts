@@ -104,21 +104,21 @@ export class SocketManager {
 
             socket.on(
                 SocketEvents.client.joinProjectRoom,
-                async (project: string, callback) => {
-                    const projectExist = await RunDao.doesProjectExist(project);
+                async (projectId: string, callback) => {
+                    const projectExist = await RunDao.doesProjectExist(projectId);
                     if (!projectExist) {
                         callback({
                             success: false,
-                            message: `Project ${project} not found`,
+                            message: `Project ${projectId} not found`,
                         });
                     } else {
-                        socket.join(`project-${project}`);
+                        socket.join(`project-${projectId}`);
                         console.debug(
-                            `${socket.id}: joined room: project-${project}`,
+                            `${socket.id}: joined room: project-${projectId}`,
                         );
 
                         // Return runs to this socket/client
-                        RunDao.getAllProjectRuns(project)
+                        RunDao.getAllProjectRuns(projectId)
                             .then((runs) => {
                                 // Push runs to the client
                                 socket.emit(
@@ -560,13 +560,13 @@ export class SocketManager {
             });
     }
 
-    static broadcastRunToProjectRoom(project: string) {
-        RunDao.getAllProjectRuns(project)
+    static broadcastRunToProjectRoom(projectId: string) {
+        RunDao.getAllProjectRuns(projectId)
             .then((runs) => {
                 // Push runs to the client
                 this.io
                     .of('/client')
-                    .to(`project-${project}`)
+                    .to(`project-${projectId}`)
                     .emit(SocketEvents.server.pushRunsData, runs);
             })
             .catch((error) => {
@@ -659,12 +659,12 @@ export class SocketManager {
 
             // Find the project by runId
             const res = await RunDao.getRunData(runId);
-            const project = res.runData.project;
+            const projectId = res.runData.projectId;
 
             // Broadcast projects to all clients in the ProjectList room
             this.broadcastRunToProjectListRoom();
             // Broadcast runs to all clients in the project room
-            this.broadcastRunToProjectRoom(project);
+            this.broadcastRunToProjectRoom(projectId);
             // Broadcast run data to all clients in the run room
             this.broadcastRunDataToRunRoom(runId, res.runData);
 

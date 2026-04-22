@@ -2,6 +2,7 @@ import { DataSource, DataSourceOptions } from 'typeorm';
 import { InputRequestDao } from './dao/InputRequest';
 import { RunDao } from './dao/Run';
 import { migrations } from './migrations';
+import { CodingAgentTable } from './models/CodingAgent';
 import { FridayAppMessageTable, FridayAppReplyTable } from './models/FridayApp';
 import { FridayAppReplyView } from './models/FridayAppView';
 import { InputRequestTable } from './models/InputRequest';
@@ -29,6 +30,7 @@ export const initializeDatabase = async (
                 FridayAppMessageTable,
                 FridayAppReplyTable,
                 FridayAppReplyView,
+                CodingAgentTable,
             ],
             synchronize: true,
             migrations: migrations,

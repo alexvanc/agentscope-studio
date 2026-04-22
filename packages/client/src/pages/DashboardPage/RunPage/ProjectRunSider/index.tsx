@@ -45,7 +45,7 @@ interface Props {
  */
 const ProjectRunSider = ({ onRunClick }: Props) => {
     const { t } = useTranslation();
-    const { runs, project } = useProjectRoom();
+    const { runs, projectId } = useProjectRoom();
     const { registerRunPageTourStep } = useTour();
     const navigate = useNavigate();
     const refList = useRef<HTMLDivElement>(null);
@@ -65,7 +65,7 @@ const ProjectRunSider = ({ onRunClick }: Props) => {
     }, []);
 
     // Extract current run and project from URL
-    const match = useMatch('/projects/:projectName/runs/:runId');
+    const match = useMatch('/projects/:projectId/runs/:runId');
     const runId = match?.params?.runId;
 
     // Filter and sort runs
@@ -77,7 +77,7 @@ const ProjectRunSider = ({ onRunClick }: Props) => {
             const lowerSearch = searchText.toLowerCase();
             result = result.filter(
                 (run) =>
-                    run.name.toLowerCase().includes(lowerSearch) ||
+                    run.run_name.toLowerCase().includes(lowerSearch) ||
                     run.id.toLowerCase().includes(lowerSearch),
             );
         }
@@ -142,11 +142,11 @@ const ProjectRunSider = ({ onRunClick }: Props) => {
                     <Tooltip>
                         <TooltipTrigger asChild>
                             <div className="flex-1 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap text-sm font-medium">
-                                {project}
+                                {runs[0]?.project_name || projectId}
                             </div>
                         </TooltipTrigger>
                         <TooltipContent>
-                            {t('common.project')}: {project}
+                            {t('common.project')}: {runs[0]?.project_name || projectId}
                         </TooltipContent>
                     </Tooltip>
                 </div>
@@ -256,12 +256,12 @@ const ProjectRunSider = ({ onRunClick }: Props) => {
                                         <Tooltip>
                                             <TooltipTrigger asChild>
                                                 <div className="overflow-hidden text-ellipsis whitespace-nowrap text-sm">
-                                                    {run.name}
+                                                    {run.run_name}
                                                 </div>
                                             </TooltipTrigger>
                                             <TooltipContent side="top">
                                                 <span className="text-xs break-all max-w-[300px]">
-                                                    {run.name}
+                                                    {run.run_name}
                                                 </span>
                                             </TooltipContent>
                                         </Tooltip>

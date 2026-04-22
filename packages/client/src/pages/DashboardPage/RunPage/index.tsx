@@ -172,19 +172,19 @@ const RunContentPage = () => {
 };
 
 const RunPage = () => {
-    const { projectName } = useParams<{ projectName: string }>();
+    const { projectId } = useParams<{ projectId: string }>();
     const navigate = useNavigate();
 
-    if (!projectName) {
+    if (!projectId) {
         return <ProjectNotFoundPage />;
     }
 
     return (
-        <ProjectRoomContextProvider project={projectName}>
+        <ProjectRoomContextProvider projectId={projectId}>
             <div className="flex h-full w-full">
                 <ProjectRunSider
                     onRunClick={(runId) =>
-                        navigate(`/projects/${projectName}/runs/${runId}`, {
+                        navigate(`/projects/${projectId}/runs/${runId}`, {
                             replace: true,
                         })
                     }

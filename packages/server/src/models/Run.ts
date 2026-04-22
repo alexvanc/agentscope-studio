@@ -10,10 +10,13 @@ export class RunTable extends BaseEntity {
     id: string;
 
     @Column()
-    project: string;
+    projectId: string;
 
-    @Column()
-    name: string;
+    @Column({ name: 'project_name' })
+    project_name: string;
+
+    @Column({ name: 'run_name' })
+    run_name: string;
 
     @Column()
     timestamp: string;

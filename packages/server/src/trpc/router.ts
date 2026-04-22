@@ -106,8 +106,9 @@ export const appRouter = t.router({
         .input(
             z.object({
                 id: z.string(),
-                project: z.string(),
-                name: z.string(),
+                project_id: z.string(),
+                project_name: z.string(),
+                run_name: z.string(),
                 timestamp: z.string(),
                 pid: z.number(),
                 status: z.enum(Object.values(Status) as [string, ...string[]]),
@@ -118,8 +119,9 @@ export const appRouter = t.router({
         .mutation(async ({ input }) => {
             const runData = {
                 id: input.id,
-                project: input.project,
-                name: input.name,
+                projectId: input.project_id,
+                project_name: input.project_name,
+                run_name: input.run_name,
                 timestamp: input.timestamp,
                 run_dir: input.run_dir || '', // Deprecated
                 pid: input.pid,
@@ -128,8 +130,8 @@ export const appRouter = t.router({
 
             await RunDao.addRun(runData);
 
-            // Notify the subscribers of the specific project
-            SocketManager.broadcastRunToProjectRoom(input.project);
+            // Notify the subscribers of the specific project (by projectId)
+            SocketManager.broadcastRunToProjectRoom(input.project_id);
 
             // Notify the clients of the project list
             SocketManager.broadcastRunToProjectListRoom();
@@ -400,10 +402,11 @@ export const appRouter = t.router({
      */
     getProjects: protectedProcedure
         .input(TableRequestParamsSchema)
-        .query(async ({ input }) => {
+        .query(async ({ input, ctx }) => {
             try {
                 console.debug('[TRPC] getProjects called with input:', input);
-                const result = await RunDao.getProjects(input);
+                // Pass ctx.user?.id to RunDao.getProjects for tenant filtering
+                const result = await RunDao.getProjects(input, (ctx.user as any)?.id);
                 return {
                     success: true,
                     message: 'Projects fetched successfully',
@@ -423,10 +426,10 @@ export const appRouter = t.router({
 
     getTraces: protectedProcedure
         .input(TableRequestParamsSchema)
-        .query(async ({ input }) => {
+        .query(async ({ input, ctx }) => {
             try {
                 console.debug('[TRPC] getTraces called with input:', input);
-                const result = await SpanDao.getTraces(input);
+                const result = await SpanDao.getTraces(input, (ctx.user as any)?.id);
                 return {
                     success: true,
                     message: 'Traces fetched successfully',
@@ -463,9 +466,9 @@ export const appRouter = t.router({
 
     getTraceStatistic: protectedProcedure
         .input(GetTraceStatisticParamsSchema)
-        .query(async ({ input }) => {
+        .query(async ({ input, ctx }) => {
             try {
-                return await SpanDao.getTraceStatistic(input);
+                return await SpanDao.getTraceStatistic(input, (ctx.user as any)?.id);
             } catch (error) {
                 console.error('Error in getTraceStatistic:', error);
                 throw new TRPCError({

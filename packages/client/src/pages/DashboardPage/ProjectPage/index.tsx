@@ -30,10 +30,10 @@ const ProjectPage = () => {
 
     // Filter the selected rows when table data source changes
     useEffect(() => {
-        const existedProjects = tableDataSource.map((proj) => proj.project);
+        const existedProjects = tableDataSource.map((proj) => proj.projectId);
         setSelectedRowKeys((prevRowKeys) =>
-            prevRowKeys.filter((project) =>
-                existedProjects.includes(project as string),
+            prevRowKeys.filter((projectId) =>
+                existedProjects.includes(projectId as string),
             ),
         );
     }, [tableDataSource]);
@@ -50,12 +50,12 @@ const ProjectPage = () => {
 
     const columns: TableColumnsType<ProjectData> = [
         {
-            key: 'project',
+            key: 'project_name',
             width: '40%',
             render: (value, record) => (
                 <TextCell
-                    text={value}
-                    selected={selectedRowKeys.includes(record.project)}
+                    text={record.project_name}
+                    selected={selectedRowKeys.includes(record.projectId)}
                 />
             ),
         },
@@ -65,7 +65,7 @@ const ProjectPage = () => {
             render: (value, record) => (
                 <TextCell
                     text={formatDateTime(value)}
-                    selected={selectedRowKeys.includes(record.project)}
+                    selected={selectedRowKeys.includes(record.projectId)}
                 />
             ),
         },
@@ -74,7 +74,7 @@ const ProjectPage = () => {
             render: (value, record) => (
                 <NumberCell
                     number={value}
-                    selected={selectedRowKeys.includes(record.project)}
+                    selected={selectedRowKeys.includes(record.projectId)}
                 />
             ),
         },
@@ -83,7 +83,7 @@ const ProjectPage = () => {
             render: (value, record) => (
                 <NumberCell
                     number={value}
-                    selected={selectedRowKeys.includes(record.project)}
+                    selected={selectedRowKeys.includes(record.projectId)}
                 />
             ),
         },
@@ -92,7 +92,7 @@ const ProjectPage = () => {
             render: (value, record) => (
                 <NumberCell
                     number={value}
-                    selected={selectedRowKeys.includes(record.project)}
+                    selected={selectedRowKeys.includes(record.projectId)}
                 />
             ),
         },
@@ -101,7 +101,7 @@ const ProjectPage = () => {
             render: (value, record) => (
                 <NumberCell
                     number={value}
-                    selected={selectedRowKeys.includes(record.project)}
+                    selected={selectedRowKeys.includes(record.projectId)}
                 />
             ),
         },
@@ -113,21 +113,21 @@ const ProjectPage = () => {
             <div className="flex-1 min-h-0 w-full">
                 <AsTable<ProjectData>
                     columns={columns}
-                    searchableColumns={['project']}
-                    searchType="project"
+                    searchableColumns={['project_name']}
+                    searchType="project_name"
                     dataSource={tableDataSource}
                     loading={tableLoading}
                     onRow={(record: ProjectData) => {
                         return {
                             onClick: (event: MouseEvent) => {
                                 if (event.type === 'click') {
-                                    navigate(`${record.project}`);
+                                    navigate(`${record.projectId}`);
                                 }
                             },
                             className: 'cursor-pointer',
                         };
                     }}
-                    rowKey="project"
+                    rowKey="projectId"
                     total={total}
                     tableRequestParams={tableRequestParams}
                     setTableRequestParams={setTableRequestParams}

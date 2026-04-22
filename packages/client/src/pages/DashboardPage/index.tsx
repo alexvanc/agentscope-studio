@@ -25,7 +25,7 @@ const DashboardPage = () => {
             />
             {/* Project-specific run monitoring with tour support */}
             <Route
-                path={'/:projectName/*'}
+                path={'/:projectId/*'}
                 element={
                     <TourContextProvider>
                         <RunPage />

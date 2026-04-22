@@ -8,6 +8,7 @@
 import { MigrationInterface } from 'typeorm';
 import { AddMessageReplyForeignKey1730000000000 } from './1730000000000-AddMessageReplyForeignKey';
 import { MigrateSpanTable1740000000000 } from './1740000000000-MigrateSpanTable';
+import { RenameRunColumns1745195000000 } from './1745195000000-RenameRunColumns';
 
 /**
  * 所有迁移列表（按时间戳顺序）
@@ -15,5 +16,6 @@ import { MigrateSpanTable1740000000000 } from './1740000000000-MigrateSpanTable'
 export const migrations: (new () => MigrationInterface)[] = [
     AddMessageReplyForeignKey1730000000000,
     MigrateSpanTable1740000000000,
+    RenameRunColumns1745195000000,
     // 未来的迁移在这里添加
 ];

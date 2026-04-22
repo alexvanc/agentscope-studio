@@ -11,7 +11,7 @@ import { useMessageApi } from './MessageApiContext.tsx';
 
 // 定义 Context 类型
 interface ProjectRoomContextType {
-    project: string;
+    projectId: string;
     runs: RunData[]; // 项目下的运行列表
 
     deleteRuns: (runIds: string[]) => void;
@@ -21,13 +21,13 @@ interface ProjectRoomContextType {
 const ProjectRoomContext = createContext<ProjectRoomContextType | null>(null);
 
 interface Props {
-    project: string;
+    projectId: string;
     children: ReactNode;
 }
 
-export function ProjectRoomContextProvider({ project, children }: Props) {
+export function ProjectRoomContextProvider({ projectId, children }: Props) {
     const socket = useSocket();
-    const roomName = `project-${project}`;
+    const roomName = `project-${projectId}`;
     const [runs, setRuns] = useState<RunData[]>([]);
     const { messageApi } = useMessageApi();
 
@@ -40,7 +40,7 @@ export function ProjectRoomContextProvider({ project, children }: Props) {
         // 加入项目房间
         socket.emit(
             SocketEvents.client.joinProjectRoom,
-            project,
+            projectId,
             (response: ResponseBody) => {
                 if (!response.success) {
                     messageApi.error(response.message);
@@ -58,7 +58,7 @@ export function ProjectRoomContextProvider({ project, children }: Props) {
             socket.off(SocketEvents.server.pushRunsData);
             socket.emit(SocketEvents.client.leaveRoom, roomName);
         };
-    }, [socket, project, roomName]);
+    }, [socket, projectId, roomName]);
 
     const deleteRuns = (runIds: string[]) => {
         if (!socket) {
@@ -84,7 +84,7 @@ export function ProjectRoomContextProvider({ project, children }: Props) {
     };
 
     return (
-        <ProjectRoomContext.Provider value={{ project, runs, deleteRuns }}>
+        <ProjectRoomContext.Provider value={{ projectId, runs, deleteRuns }}>
             {children}
         </ProjectRoomContext.Provider>
     );

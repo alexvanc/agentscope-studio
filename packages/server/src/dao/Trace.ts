@@ -428,6 +428,7 @@ export class SpanDao {
      */
     static async getTraces(
         params: TableRequestParams,
+        userId?: string,
     ): Promise<TableData<Trace>> {
         try {
             const { pagination, sort, filters } = params;
@@ -461,7 +462,13 @@ export class SpanDao {
                 .addSelect(nameSubquery, 'name')
                 .addSelect(spanCountSubquery, 'spanCount')
                 .addSelect(totalTokensSubquery, 'totalTokens')
-                .groupBy('span.traceId');
+
+            if (userId) {
+                queryBuilder.innerJoin('run_table', 'run', 'run.id = span.conversationId');
+                queryBuilder.innerJoin('coding_codingagent', 'ca', 'ca.id = run.projectId AND ca.user_id = :userId', { userId });
+            }
+
+            queryBuilder.groupBy('span.traceId');
 
             // Apply name filter - use the subquery directly in HAVING
             if (filters?.traceName) {
@@ -678,11 +685,14 @@ export class SpanDao {
     }
 
     // Get trace statistics
-    static async getTraceStatistic(filters?: {
-        startTime?: string;
-        endTime?: string;
-        traceId?: string;
-    }): Promise<{
+    static async getTraceStatistic(
+        filters?: {
+            startTime?: string;
+            endTime?: string;
+            traceId?: string;
+        },
+        userId?: string
+    ): Promise<{
         totalTraces: number;
         totalSpans: number;
         errorTraces: number;
@@ -692,6 +702,11 @@ export class SpanDao {
     }> {
         try {
             const queryBuilder = SpanTable.createQueryBuilder('span');
+
+            if (userId) {
+                queryBuilder.innerJoin('run_table', 'run', 'run.id = span.conversationId');
+                queryBuilder.innerJoin('coding_codingagent', 'ca', 'ca.id = run.project AND ca.user_id = :userId', { userId });
+            }
 
             if (filters?.startTime) {
                 queryBuilder.andWhere('span.startTimeUnixNano >= :startTime', {
