@@ -2,7 +2,7 @@ import {
     FridayAppMessageTable,
     FridayAppReplyTable,
 } from '../models/FridayApp.js';
-import { ContentBlocks, FridayReply } from '../../../../shared/src/index.js';
+import { ContentBlocks, FridayReply } from '../../../shared/src/index.js';
 import { FridayAppReplyView } from '../models/FridayAppView.js';
 import { LessThan } from 'typeorm';
 import dayjs from 'dayjs';

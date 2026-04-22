@@ -5,8 +5,8 @@
         "target": "es2016",
         "experimentalDecorators": true,
         "emitDecoratorMetadata": true,
-        "module": "commonjs",
-        "moduleResolution": "node10",
+        "module": "node16",
+        "moduleResolution": "node16",
         "baseUrl": ".",
         "paths": {
             "@/*": ["./src/*"]

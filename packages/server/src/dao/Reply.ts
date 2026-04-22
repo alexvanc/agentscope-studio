@@ -1,4 +1,4 @@
-import { RegisterReplyParams, Reply, Message } from '../../../../shared/src/index.js';
+import { RegisterReplyParams, Reply, Message } from '../../../shared/src/index.js';
 import { ReplyTable } from '../models/Reply.js';
 
 export class ReplyDao {
