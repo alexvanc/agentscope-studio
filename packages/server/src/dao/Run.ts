@@ -6,7 +6,7 @@ import {
     Status,
     TableData,
     TableRequestParams,
-} from '../../../../shared/src/index.js';
+} from '../../../shared/src/index.js';
 import { RunTable } from '../models/Run.js';
 import { RunView } from '../models/RunView.js';
 import { checkProcessByPid } from '../utils/index.js';
