@@ -1,17 +1,17 @@
 import { DataSource, DataSourceOptions } from 'typeorm';
-import { InputRequestDao } from './dao/InputRequest';
-import { RunDao } from './dao/Run';
-import { migrations } from './migrations/index';
-import { CodingAgentTable } from './models/CodingAgent';
-import { FridayAppMessageTable, FridayAppReplyTable } from './models/FridayApp';
-import { FridayAppReplyView } from './models/FridayAppView';
-import { InputRequestTable } from './models/InputRequest';
-import { MessageTable } from './models/Message';
-import { ModelInvocationView } from './models/ModelInvocationView';
-import { ReplyTable } from './models/Reply';
-import { RunTable } from './models/Run';
-import { RunView } from './models/RunView';
-import { SpanTable } from './models/Trace';
+import { InputRequestDao } from './dao/InputRequest.js';
+import { RunDao } from './dao/Run.js';
+import { migrations } from './migrations/index.js';
+import { CodingAgentTable } from './models/CodingAgent.js';
+import { FridayAppMessageTable, FridayAppReplyTable } from './models/FridayApp.js';
+import { FridayAppReplyView } from './models/FridayAppView.js';
+import { InputRequestTable } from './models/InputRequest.js';
+import { MessageTable } from './models/Message.js';
+import { ModelInvocationView } from './models/ModelInvocationView.js';
+import { ReplyTable } from './models/Reply.js';
+import { RunTable } from './models/Run.js';
+import { RunView } from './models/RunView.js';
+import { SpanTable } from './models/Trace.js';
 
 export const initializeDatabase = async (
     databaseConfig: DataSourceOptions,

@@ -1,5 +1,5 @@
-import { RegisterReplyParams, Reply, Message } from '../../../shared/src/index';
-import { ReplyTable } from '../models/Reply';
+import { RegisterReplyParams, Reply, Message } from '../../../shared/src/index.js';
+import { ReplyTable } from '../models/Reply.js';
 
 export class ReplyDao {
     static async getReply(replyId: string) {

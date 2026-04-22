@@ -7,15 +7,15 @@ import {
     SpanResource,
     SpanScope,
     Trace,
-} from '../../../shared/src/types/trace';
+} from '../../../shared/src/types/trace.js';
 import {
     ModelInvocationData,
     TableData,
     TableRequestParams,
-} from '../../../shared/src/types/trpc';
-import { getNestedValue } from '../../../shared/src/utils/objectUtils';
-import { ModelInvocationView } from '../models/ModelInvocationView';
-import { SpanTable } from '../models/Trace';
+} from '../../../shared/src/types/trpc.js';
+import { getNestedValue } from '../../../shared/src/utils/objectUtils.js';
+import { ModelInvocationView } from '../models/ModelInvocationView.js';
+import { SpanTable } from '../models/Trace.js';
 
 export class SpanDao {
     static async saveSpans(dataArray: SpanData[]): Promise<SpanTable[]> {

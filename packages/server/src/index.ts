@@ -4,15 +4,15 @@ import { createServer } from 'http';
 import opener from 'opener';
 import path from 'path';
 import portfinder from 'portfinder';
-import { APP_INFO, ConfigManager } from '../../shared/src/config/index';
-import { displayBanner } from '../../shared/src/utils/banner';
-import { promptUser } from '../../shared/src/utils/terminal';
-import { initializeDatabase } from './database';
-import { OtelGrpcServer } from './otel/grpc-server';
-import otelRouter from './otel/router';
-import { appRouter } from './trpc/router';
-import { createContext } from './trpc/context';
-import { SocketManager } from './trpc/socket';
+import { APP_INFO, ConfigManager } from '../../shared/src/config/index.js';
+import { displayBanner } from '../../shared/src/utils/banner.js';
+import { promptUser } from '../../shared/src/utils/terminal.js';
+import { initializeDatabase } from './database.js';
+import { OtelGrpcServer } from './otel/grpc-server.js';
+import otelRouter from './otel/router.js';
+import { appRouter } from './trpc/router.js';
+import { createContext } from './trpc/context.js';
+import { SocketManager } from './trpc/socket.js';
 
 async function initializeServer() {
     try {

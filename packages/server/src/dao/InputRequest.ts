@@ -1,6 +1,6 @@
-import { InputRequestTable } from '../models/InputRequest';
-import { RunTable } from '../models/Run';
-import { Status } from '../../../shared/src/types/messageForm';
+import { InputRequestTable } from '../models/InputRequest.js';
+import { RunTable } from '../models/Run.js';
+import { Status } from '../../../shared/src/types/messageForm.js';
 
 export class InputRequestDao {
     static async getInputRequestByRequestId(requestId: string) {

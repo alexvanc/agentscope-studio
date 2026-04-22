@@ -6,11 +6,11 @@ import {
     Status,
     TableData,
     TableRequestParams,
-} from '../../../shared/src/index';
-import { RunTable } from '../models/Run';
-import { RunView } from '../models/RunView';
-import { checkProcessByPid } from '../utils/index';
-import { SpanDao } from './Trace';
+} from '../../../shared/src/index.js';
+import { RunTable } from '../models/Run.js';
+import { RunView } from '../models/RunView.js';
+import { checkProcessByPid } from '../utils/index.js';
+import { SpanDao } from './Trace.js';
 
 export class RunDao {
     static async doesProjectExist(projectId: string, userId?: string) {

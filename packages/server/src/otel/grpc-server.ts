@@ -1,9 +1,9 @@
 import * as grpc from '@grpc/grpc-js';
-import { SpanDao } from '../dao/Trace';
-import { SocketManager } from '../trpc/socket';
-import { opentelemetry } from './opentelemetry/proto/collector/trace/v1/trace_service';
-import * as traceProto from './opentelemetry/proto/trace/v1/trace';
-import { SpanProcessor } from './processor';
+import { SpanDao } from '../dao/Trace.js';
+import { SocketManager } from '../trpc/socket.js';
+import { opentelemetry } from './opentelemetry/proto/collector/trace/v1/trace_service.js';
+import * as traceProto from './opentelemetry/proto/trace/v1/trace.js';
+import { SpanProcessor } from './processor.js';
 
 /**
  * gRPC server implementation for OpenTelemetry TraceService

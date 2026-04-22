@@ -16,22 +16,22 @@ import {
     SpeechData,
     SocketEvents,
     SocketRoomName,
-} from '../../../shared/src/types/trpc';
-import { RunDao } from '../dao/Run';
-import { validateToken } from './trpc';
+} from '../../../shared/src/types/trpc.js';
+import { RunDao } from '../dao/Run.js';
+import { validateToken } from './trpc.js';
 
 import dayjs from 'dayjs';
 import * as fs from 'node:fs';
-import { ConfigManager, PATHS } from '../../../shared/src/index';
+import { ConfigManager, PATHS } from '../../../shared/src/index.js';
 import {
     FridayConfig,
     FridayConfigManager,
-} from '../../../shared/src/config/friday';
-import { SpanData } from '../../../shared/src/types/trace';
-import { FridayAppMessageDao } from '../dao/FridayAppMessage';
-import { InputRequestDao } from '../dao/InputRequest';
-import { SpanDao } from '../dao/Trace';
-import { ReplyingStateManager } from '../services/ReplyingStateManager';
+} from '../../../shared/src/config/friday.js';
+import { SpanData } from '../../../shared/src/types/trace.js';
+import { FridayAppMessageDao } from '../dao/FridayAppMessage.js';
+import { InputRequestDao } from '../dao/InputRequest.js';
+import { SpanDao } from '../dao/Trace.js';
+import { ReplyingStateManager } from '../services/ReplyingStateManager.js';
 
 export class SocketManager {
     private static io: Server;

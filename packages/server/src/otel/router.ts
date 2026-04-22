@@ -2,10 +2,10 @@ import express, { Request, Response } from 'express';
 
 import { promisify } from 'util';
 import { gunzip, inflate } from 'zlib';
-import { SpanDao } from '../dao/Trace';
-import { SocketManager } from '../trpc/socket';
-import { opentelemetry } from './opentelemetry/proto/trace/v1/trace';
-import { SpanProcessor } from './processor';
+import { SpanDao } from '../dao/Trace.js';
+import { SocketManager } from '../trpc/socket.js';
+import { opentelemetry } from './opentelemetry/proto/trace/v1/trace.js';
+import { SpanProcessor } from './processor.js';
 const gunzipAsync = promisify(gunzip);
 const inflateAsync = promisify(inflate);
 

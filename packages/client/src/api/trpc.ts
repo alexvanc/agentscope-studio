@@ -40,14 +40,14 @@ export const trpcClient = trpc.createClient({
                                 value.result?.type === 'data' &&
                                 (value.result.data as any)?.error?.data?.code === 'UNAUTHORIZED'
                             ) {
-                                const redirectUri = encodeURIComponent(window.location.href);
+                                const redirectUri = encodeURIComponent("https://agent.cstcloud.cn");
                                 window.location.href = `https://aai.cstcloud.net/oidc/authorize?response_type=code&client_id=14093&scope=openid&redirect_uri=${redirectUri}`;
                             }
                             observer.next(value);
                         },
                         error(err) {
                             if (err.data?.code === 'UNAUTHORIZED') {
-                                const redirectUri = encodeURIComponent(window.location.href);
+                                const redirectUri = encodeURIComponent("https://agent.cstcloud.cn");
                                 window.location.href = `https://aai.cstcloud.net/oidc/authorize?response_type=code&client_id=14093&scope=openid&redirect_uri=${redirectUri}`;
                             }
                             observer.error(err);
