@@ -107,8 +107,8 @@ const StudioSidebar = () => {
             </SidebarHeader>
             <SidebarContent>
                 {sidebarItems.map((item) => (
-                    <SidebarGroup key={item.title} className="-mt-2">
-                        <SidebarGroupLabel>
+                    <SidebarGroup key={item.title} className="py-4">
+                        <SidebarGroupLabel className="text-sm font-semibold mb-2">
                             <span>{item.title}</span>
                         </SidebarGroupLabel>
                         {item.items.map((subItem) => (
@@ -116,7 +116,8 @@ const StudioSidebar = () => {
                                 <SidebarMenu>
                                     <SidebarMenuItem>
                                         <SidebarMenuButton
-                                            className="cursor-pointer"
+                                            size="lg"
+                                            className="cursor-pointer py-6"
                                             tooltip={subItem.title}
                                             onClick={() => {
                                                 // Check if it's an external URL
@@ -142,8 +143,8 @@ const StudioSidebar = () => {
                                                 }
                                             }}
                                         >
-                                            <subItem.icon />
-                                            <span>{subItem.title}</span>
+                                            <subItem.icon className="size-5" />
+                                            <span className="text-base">{subItem.title}</span>
                                         </SidebarMenuButton>
                                     </SidebarMenuItem>
                                 </SidebarMenu>
