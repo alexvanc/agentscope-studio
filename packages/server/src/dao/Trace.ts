@@ -723,7 +723,7 @@ export class SpanDao {
 
             if (userId) {
                 queryBuilder.innerJoin('run_table', 'run', 'run.id = span.conversationId');
-                queryBuilder.innerJoin('coding_codingagent', 'ca', 'ca.id = run.project AND ca.user_id = :userId', { userId });
+                queryBuilder.innerJoin('coding_codingagent', 'ca', 'ca.id = run.projectId AND ca.user_id = :userId', { userId });
             }
 
             if (filters?.startTime) {
